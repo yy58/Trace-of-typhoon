@@ -1,0 +1,11 @@
+{
+	"name": "trace-of-typhoon",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"start": "serve . -s"
+	},
+	"devDependencies": {
+		"serve": "^14.2.0"
+	}
+}

@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+.env
+
+typhoon_art/sample_typhoons.csv
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
