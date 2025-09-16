@@ -7,3 +7,5 @@ typhoon_art/sample_typhoons.csv
 *.pyc
 *.pyo
 *.pyd
+
+typhoon_update0/sample_typhoons.csv
