@@ -241,7 +241,8 @@ def main(argv):
     args = parser.parse_args(argv[1:])
     here = __file__
     here_dir = os.path.dirname(os.path.abspath(here))
-    path = args.path or os.path.join(here_dir, 'sample_typhoons.csv')
+    # default to the user-provided CSV in the gen_typhoon folder if no path given
+    path = args.path or os.path.join(here_dir, '..', 'gen_typhoon', 'user_typhoons.csv')
     print("Typhoon Track Visualization")
     df = load_csv(path, zero_is_nan=getattr(args, 'zero_is_nan', False))
     typhoons = build_typhoons(df)
