@@ -76,3 +76,4 @@ Exact terminal command (copy-paste)
   --playback-duration 120 --min-wind 0 --zero-is-nan --debug-grid --debug-density 8 \
   --seed 12345 --deterministic-time
 ```
+.venv/bin/python "typhoon_update0/main.py" --jitter 40 --spread cell --grid-size 120 --spread-radius 48 --use-datetime --playback-duration 120 --min-wind 0 --zero-is-nan  --debug-density 8 --seed 12345 --deterministic-time
