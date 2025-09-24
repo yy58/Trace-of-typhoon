@@ -167,6 +167,22 @@ def load_csv(path, zero_is_nan=False):
         except Exception:
             pass
 
+    # Detect and remove obvious placeholder points at exactly (0,0)
+    if 'lat' in df.columns and 'lon' in df.columns:
+        try:
+            total = len(df)
+            zero_latlon_count = int(((df['lat'] == 0) & (df['lon'] == 0)).sum())
+            if zero_latlon_count > 0:
+                # if many rows are exactly (0,0) treat them as missing data and drop
+                if total > 0 and (zero_latlon_count / float(total)) > 0.005:
+                    df = df.loc[~((df['lat'] == 0) & (df['lon'] == 0))].reset_index(drop=True)
+                    print(f"load_csv: dropped {zero_latlon_count} placeholder (0,0) points ({zero_latlon_count/total:.2%})")
+                else:
+                    # if only a few, leave them but warn
+                    print(f"load_csv: warning - {zero_latlon_count} points at exact (0,0) found; leaving them in place")
+        except Exception:
+            pass
+
     return df
 
 def build_typhoons(df):
@@ -198,10 +214,12 @@ def build_typhoons(df):
     return list(groups.values())
 
 def latlon_to_xy(lat, lon):
-    # Equirectangular projection
-    x = int((lon + 180) / 360 * WIDTH)
-    y = int(HEIGHT - (lat + 10) / 60 * HEIGHT)
-    return x, y
+    # Improved equirectangular projection that centers on dataset mean later
+    # Standard mapping: lon -180..180 -> x 0..WIDTH; lat -90..90 -> y 0..HEIGHT (top to bottom)
+    x = (lon + 180.0) / 360.0 * WIDTH
+    # map lat -90..90 to y 0..HEIGHT (flip so north is up)
+    y = (90.0 - lat) / 180.0 * HEIGHT
+    return int(x), int(y)
 
 def wind_to_color(wind):
     wn = max(0.0, min(1.0, (wind - 5) / 145.0))
@@ -236,8 +254,10 @@ def main(argv):
     parser.add_argument('--zero-is-nan', action='store_true', help='treat wind==0 as missing (NaN) in importer)')
    # parser.add_argument('--debug-grid', action='store_true', help='draw grid cell boundaries and anchors for tuning')
     parser.add_argument('--debug-density', type=int, default=6, help='only show anchors for cells with this many or more typhoons (debug-grid)')
+    parser.add_argument('--debug-grid', action='store_true', help='draw grid cell boundaries and anchors for tuning')
     parser.add_argument('--seed', type=int, default=12345, help='optional RNG seed to make jitter/spread reproducible (default=12345)')
     parser.add_argument('--deterministic-time', action='store_true', default=True, help='use frame-count based time instead of wall-clock to make stdout deterministic (default ON)')
+    parser.add_argument('--no-center', action='store_true', default=False, help='do not center visualization on dataset mean; use raw geographic positions')
     args = parser.parse_args(argv[1:])
     here = __file__
     here_dir = os.path.dirname(os.path.abspath(here))
@@ -280,6 +300,28 @@ def main(argv):
         else:
             ax, ay = 0, 0
         anchors[ty.id] = (ax, ay)
+
+    # Compute dataset center in lat/lon and corresponding pixel offset so visual is centered
+    all_lats = [p[1] for ty in typhoons for p in ty.points if p[1] is not None]
+    all_lons = [p[2] for ty in typhoons for p in ty.points if p[2] is not None]
+    center_offset = (0, 0)
+    try:
+        if not getattr(args, 'no_center', False) and all_lats and all_lons:
+            mean_lat = sum(all_lats) / len(all_lats)
+            mean_lon = sum(all_lons) / len(all_lons)
+            mean_x, mean_y = latlon_to_xy(mean_lat, mean_lon)
+            # desired center is screen center
+            target_x = WIDTH // 2
+            target_y = HEIGHT // 2
+            offset_x = target_x - mean_x
+            offset_y = target_y - mean_y
+            center_offset = (int(offset_x), int(offset_y))
+            print(f"Centering visualization: mean lat/lon ({mean_lat:.2f}, {mean_lon:.2f}) -> pixel offset {center_offset}")
+        else:
+            if getattr(args, 'no_center', False):
+                print("Centering disabled (--no-center); using raw geographic projection")
+    except Exception:
+        center_offset = (0, 0)
 
     # compute optional spread offsets based on anchor positions (average lat/lon)
     spread_offsets = {ty.id: (0, 0) for ty in typhoons}
@@ -370,6 +412,10 @@ def main(argv):
             sx, sy = spread_offsets.get(ty.id, (0, 0))
             x += int(sx)
             y += int(sy)
+            # apply global centering offset
+            ox, oy = center_offset
+            x += ox
+            y += oy
             if not (0 <= x < WIDTH and 0 <= y < HEIGHT):
                 continue
             visible_typhoons += 1
