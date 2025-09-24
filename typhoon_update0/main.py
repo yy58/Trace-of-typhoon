@@ -234,15 +234,14 @@ def main(argv):
     parser.add_argument('--playback-duration', type=float, default=60.0, help='seconds for a full datetime playback loop')
     parser.add_argument('--min-wind', type=float, default=0.0, help='minimum wind (kt) to display; set >0 to hide weak/no-wind points')
     parser.add_argument('--zero-is-nan', action='store_true', help='treat wind==0 as missing (NaN) in importer)')
-    parser.add_argument('--debug-grid', action='store_true', help='draw grid cell boundaries and anchors for tuning')
+   # parser.add_argument('--debug-grid', action='store_true', help='draw grid cell boundaries and anchors for tuning')
     parser.add_argument('--debug-density', type=int, default=6, help='only show anchors for cells with this many or more typhoons (debug-grid)')
     parser.add_argument('--seed', type=int, default=12345, help='optional RNG seed to make jitter/spread reproducible (default=12345)')
     parser.add_argument('--deterministic-time', action='store_true', default=True, help='use frame-count based time instead of wall-clock to make stdout deterministic (default ON)')
     args = parser.parse_args(argv[1:])
     here = __file__
     here_dir = os.path.dirname(os.path.abspath(here))
-    # default to the user-provided CSV in the gen_typhoon folder if no path given
-    path = args.path or os.path.join(here_dir, '..', 'gen_typhoon', 'user_typhoons.csv')
+    path = args.path or os.path.join(here_dir, 'sample_typhoons.csv')
     print("Typhoon Track Visualization")
     df = load_csv(path, zero_is_nan=getattr(args, 'zero_is_nan', False))
     typhoons = build_typhoons(df)
@@ -317,18 +316,18 @@ def main(argv):
     spiral_steps = 32
     # when an interpolated jump is large, clear the trail to avoid long flashing lines
     jump_threshold = 200
-    # compute global datetime span for datetime playback if requested
+    # compute global datetime span (used for playback and to show year-range overlay)
     global_start = None
     global_end = None
-    if args.use_datetime:
-        dts = [p[0] for ty in typhoons for p in ty.points if p[0] is not None]
-        if dts:
-            try:
-                global_start = min(dts)
-                global_end = max(dts)
-            except Exception:
-                global_start, global_end = None, None
-        else:
+    dts = [p[0] for ty in typhoons for p in ty.points if p[0] is not None]
+    if dts:
+        try:
+            global_start = min(dts)
+            global_end = max(dts)
+        except Exception:
+            global_start, global_end = None, None
+    else:
+        if args.use_datetime:
             print("Warning: --use-datetime specified but no datetime values found in data; falling back to index-based animation")
 
     fps = 30.0
@@ -457,6 +456,16 @@ def main(argv):
             if ts_str:
                 ts_surf = font.render(ts_str, True, (200, 200, 200))
                 screen.blit(ts_surf, (8, 8))
+        # Always show data year-range if datetimes are present
+        if global_start is not None and global_end is not None:
+            try:
+                start_year = getattr(global_start, 'year', None) or str(global_start)[:4]
+                end_year = getattr(global_end, 'year', None) or str(global_end)[:4]
+                yr_str = f"Data span: {start_year} — {end_year}"
+                yr_surf = font.render(yr_str, True, (180, 180, 180))
+                screen.blit(yr_surf, (8, 28))
+            except Exception:
+                pass
         if frame_count % 30 == 0:
             print(f"Time: {now:.1f}s, Visible typhoons: {visible_typhoons}")
         pygame.display.flip()

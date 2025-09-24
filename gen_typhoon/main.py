@@ -54,7 +54,7 @@ def make_glow_surface(radius, color, intensity=1.0):
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument('--csv', default='gen_typhoon/sample_typhoons.csv')
+    ap.add_argument('--csv', default='gen_typhoon/sample_typhoons_small.csv')
     ap.add_argument('--width', type=int, default=WIDTH)
     ap.add_argument('--height', type=int, default=HEIGHT)
     ap.add_argument('--seed', type=int, default=12345)
