@@ -63,17 +63,47 @@ Troubleshooting
   - make sure you started the script with `--debug-grid` and `--use-datetime` respectively; they are opt-in.
   - to reproduce exactly, include `--seed <N>` and `--deterministic-time` on the command line.
 
-Want me to change defaults?
 
-I can set sensible defaults (for example enable `--deterministic-time` and a default `--seed`) if you'd like. Reply with "set defaults" and mention which flags to enable by default.
 
-Exact terminal command (copy-paste)
+Use one of the commands below depending on your OS and shell. Run them from the repository root.
+
+macOS / Linux (bash or zsh)
 
 ```bash
-/Users/yyg/Desktop/polyu/SD5913\ creative\ programming/Trace-of-typhoon/.venv/bin/python \
-  "/Users/yyg/Desktop/polyu/SD5913 creative programming/Trace-of-typhoon/typhoon_update0/main.py" \
+# create & activate a virtual environment (only once)
+python3 -m venv .venv
+source .venv/bin/activate
+
+# install requirements if present
+pip install -r typhoon_update0/requirements.txt || true
+
+# run the visualization (example reproducible flags)
+python typhoon_update0/main.py \
   --jitter 40 --spread cell --grid-size 120 --spread-radius 48 --use-datetime \
   --playback-duration 120 --min-wind 0 --zero-is-nan --debug-grid --debug-density 8 \
   --seed 12345 --deterministic-time
 ```
-.venv/bin/python "typhoon_update0/main.py" --jitter 40 --spread cell --grid-size 120 --spread-radius 48 --use-datetime --playback-duration 120 --min-wind 0 --zero-is-nan  --debug-density 8 --seed 12345 --deterministic-time
+
+macOS / Linux (without activating venv)
+
+```bash
+.venv/bin/python typhoon_update0/main.py --jitter 40 --spread cell --grid-size 120 --spread-radius 48 --use-datetime --playback-duration 120 --min-wind 0 --zero-is-nan --debug-grid --debug-density 8 --seed 12345 --deterministic-time
+```
+
+Windows (PowerShell)
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r typhoon_update0\requirements.txt ; # optional
+python typhoon_update0\main.py --jitter 40 --spread cell --grid-size 120 --spread-radius 48 --use-datetime --playback-duration 120 --min-wind 0 --zero-is-nan --debug-grid --debug-density 8 --seed 12345 --deterministic-time
+```
+
+Windows (cmd.exe)
+
+```cmd
+python -m venv .venv
+.venv\Scripts\activate.bat
+pip install -r typhoon_update0\requirements.txt
+python typhoon_update0\main.py --jitter 40 --spread cell --grid-size 120 --spread-radius 48 --use-datetime --playback-duration 120 --min-wind 0 --zero-is-nan --debug-grid --debug-density 8 --seed 12345 --deterministic-time
+```
