@@ -100,7 +100,7 @@ python typhoon_update0/main.py \
 typhoon_update0/
 ├── main.py                # Visualization script (entry point)
 ├── sample_typhoons.csv    # Default dataset (IBTrACS-like sample)
-└──  requirements.txt      # Dependencies
+└── requirements.txt      # Dependencies
 ```
 
 ## Acknowledgments
